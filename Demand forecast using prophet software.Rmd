@@ -1,0 +1,59 @@
+---
+title: "Demand Forecast using Prophet library"
+author: "Joshua Edefo"
+date: "2024-08-02"
+email: "edefojoshua2000@yahoo.com"
+output: github_document
+always_allow_html: true
+---
+Install and Load required libraries
+```{r, message=FALSE}
+library(readxl) 
+library(dplyr)
+library(tidyverse)
+library(writexl)
+library(prophet)
+```
+
+Import the dataset, cheking and preparing the data for the model
+
+```{r b}
+data <- read_excel("C:/Users/joe62/OneDrive - Aberystwyth University/Apps/Desktop/GP Prescribing/Wales/Data_for_simulation.xlsx")
+# pipe dataset into dataframe
+df <- as.data.frame(data)
+# inspect variables
+str(data)
+head (data)
+# date format
+df$date <- ymd(df$date)
+df <- df %>% rename(ds = date, y =demand)
+```
+ Create a Prophet model, generatefuter dates and forecast
+
+```{r c}
+model <- prophet(df, daily.seasonality = TRUE)
+#Generate Future Dates for Forecasting
+future <- make_future_dataframe(model, periods = 2)
+#Make Forecast
+forecast <- predict(model, future)
+View(forecast)
+```
+
+Evaluate Residuals and Autocorrelation and plot the forecast
+
+```{r d}
+df1 <- inner_join(forecast, df, by = "ds")
+df1$residuals <- df1$y - df1$yhat
+# Calculate autocorrelation using acf
+acf(df1$residuals, lag.max = 5)
+# Plot the forecast
+dyplot.prophet(model, forecast, xlab = "Demand",  ylab = "Date", main = "Demand Forecast")
+
+```
+
+session information
+
+```{r e}
+sessionInfo()
+```
+```
